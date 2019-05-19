@@ -2,11 +2,10 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import * as topojson from 'topojson';
 import * as d3 from 'd3';
-import { educUrl, countyUrl } from './constants';
 
-interface topoRes {
-  features: any;
-}
+import { educUrl, countyUrl } from './constants';
+import './App.css';
+
 class App extends Component {
   state = { usFeatures: [], usEducation: [] };
   componentDidMount = async () => {
@@ -51,6 +50,37 @@ class App extends Component {
       .attr('class', 'key')
       .attr('id', 'legend')
       .attr('transform', 'translate(0,40)');
+    g.selectAll('rect')
+      .data(
+        color.range().map(function(d) {
+          let data = color.invertExtent(d);
+          if (data[0] == null) data[0] = x.domain()[0];
+          if (data[1] == null) data[1] = x.domain()[1];
+          return data;
+        })
+      )
+      .enter()
+      .append('rect')
+      .attr('height', 8)
+      .attr('x', d => x(Number(d[0])))
+      .attr('width', d => x(Number(d[1])) - x(Number(d[0])))
+      .attr('fill', d => color(Number(d[0])));
+    g.append('text')
+      .attr('class', 'caption')
+      .attr('x', x.range()[0])
+      .attr('y', -6)
+      .attr('fill', '#000')
+      .attr('text-anchor', 'start')
+      .attr('font-weight', 'bold');
+    g.call(
+      d3
+        .axisBottom(x)
+        .tickSize(13)
+        .tickFormat(x => Math.round(Number(x)) + '%')
+        .tickValues(color.domain())
+    )
+      .select('.domain') // remove last empty tick
+      .remove();
   };
   render() {
     return <div className='svg-container' />;
