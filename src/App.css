@@ -5,3 +5,16 @@
   width: 100vw;
   height: 100vh;
 }
+
+.tooltip {
+  position: absolute;
+  padding: 10px;
+  font: 12px sans-serif;
+  background: rgba(0, 0, 0, 0.8);
+  border: 0px;
+  color: #fff;
+  border-radius: 8px;
+  pointer-events: none;
+  width: 170px;
+  text-align: center;
+}

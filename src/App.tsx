@@ -6,6 +6,31 @@ import * as d3 from 'd3';
 import { educUrl, countyUrl } from './constants';
 import './App.css';
 
+interface usFeature {
+  geometry: { coordinates: [number[]]; type: string };
+  id: number;
+  properties: {};
+  type: string;
+}
+// interface objectType {
+//   type: string;
+//   geometries: { type: string; arcs: [number[]] };
+// }
+// interface usEducation {
+//   arcs: [[number[]]];
+//   bbox: number[];
+//   objects: {
+//     counties: objectType;
+//     states: objectType;
+//     nation: objectType;
+//   };
+// }
+interface usEducationType {
+  area_name: string;
+  bachelorsOrHigher: number;
+  fips: number;
+  state: string;
+}
 class App extends Component {
   state = { usFeatures: [], usEducation: [] };
   componentDidMount = async () => {
@@ -18,6 +43,7 @@ class App extends Component {
             .then(async ({ data }) =>
               topojson.feature(data, data.objects.counties)
             );
+          console.log('usFeatures ', usFeatures);
           return { usFeatures, usEducation };
         });
       this.setState({ usFeatures, usEducation }, () => this.createChart());
@@ -81,6 +107,92 @@ class App extends Component {
     )
       .select('.domain') // remove last empty tick
       .remove();
+
+    const { usFeatures, usEducation } = this.state;
+
+    const tooltip = d3
+      .select('.svg-container')
+      .append('div')
+      .attr('class', 'tooltip')
+      .attr('id', 'tooltip')
+      .style('opacity', 0);
+
+    svg
+      .append('g')
+      .attr('class', 'counties')
+      .selectAll('path')
+      .data(usFeatures)
+      .enter()
+      .append('path')
+      .attr('class', 'county')
+      .attr('data-fips', function(d: usFeature) {
+        return d.id;
+      })
+      .attr('data-education', function(d: usFeature) {
+        var result: usEducationType[] = usEducation.filter(function(
+          obj: usEducationType
+        ) {
+          return obj.fips == d.id;
+        });
+        if (result[0]) {
+          return result[0].bachelorsOrHigher;
+        }
+        return 0;
+      })
+      .attr('fill', function(d: usFeature) {
+        var result: usEducationType[] = usEducation.filter(function(
+          obj: usEducationType
+        ) {
+          return obj.fips === d.id;
+        });
+        if (result[0]) {
+          return color(result[0].bachelorsOrHigher);
+        }
+        //could not find a matching fips id in the data
+        return color(0);
+      })
+      .attr('d', path)
+      .on('mouseover', function(d: usFeature) {
+        console.log('mouseover');
+        tooltip.style('opacity', 0.9);
+        tooltip
+          .html(() => {
+            var result: usEducationType[] = usEducation.filter(function(
+              obj: usEducationType
+            ) {
+              return obj.fips === d.id;
+            });
+            if (result[0]) {
+              return (
+                result[0]['area_name'] +
+                ', ' +
+                result[0]['state'] +
+                ': ' +
+                result[0].bachelorsOrHigher +
+                '%'
+              );
+            }
+            //could not find a matching fips id in the data
+            return null;
+          })
+          .attr('data-education', function() {
+            var result: usEducationType[] = usEducation.filter(function(
+              obj: usEducationType
+            ) {
+              return obj.fips === d.id;
+            });
+            if (result[0]) {
+              return result[0].bachelorsOrHigher;
+            }
+            //could not find a matching fips id in the data
+            return 0;
+          })
+          .style('left', d3.event.pageX + 10 + 'px')
+          .style('top', d3.event.pageY - 28 + 'px');
+      })
+      .on('mouseout', function(d) {
+        tooltip.style('opacity', 0);
+      });
   };
   render() {
     return <div className='svg-container' />;
