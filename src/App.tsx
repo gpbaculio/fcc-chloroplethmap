@@ -43,7 +43,6 @@ class App extends Component {
             .then(async ({ data }) =>
               topojson.feature(data, data.objects.counties)
             );
-          console.log('usFeatures ', usFeatures);
           return { usFeatures, usEducation };
         });
       this.setState({ usFeatures, usEducation }, () => this.createChart());
@@ -52,9 +51,7 @@ class App extends Component {
     }
   };
   createChart = () => {
-    const unemployment = d3.map();
     const path = d3.geoPath();
-
     const x = d3
       .scaleLinear()
       .domain([2.6, 75.1])
@@ -116,7 +113,7 @@ class App extends Component {
       .attr('class', 'tooltip')
       .attr('id', 'tooltip')
       .style('opacity', 0);
-
+    console.log('usFeatures ', usFeatures);
     svg
       .append('g')
       .attr('class', 'counties')
@@ -132,7 +129,7 @@ class App extends Component {
         var result: usEducationType[] = usEducation.filter(function(
           obj: usEducationType
         ) {
-          return obj.fips == d.id;
+          return obj.fips === d.id;
         });
         if (result[0]) {
           return result[0].bachelorsOrHigher;
@@ -153,7 +150,6 @@ class App extends Component {
       })
       .attr('d', path)
       .on('mouseover', function(d: usFeature) {
-        console.log('mouseover');
         tooltip.style('opacity', 0.9);
         tooltip
           .html(() => {
@@ -195,7 +191,15 @@ class App extends Component {
       });
   };
   render() {
-    return <div className='svg-container' />;
+    return (
+      <div className='svg-container d-flex flex-column'>
+        <h1 id='title'>United States Educational Attainment</h1>
+        <div id='description'>
+          Percentage of adults age 25 and older with a bachelor's degree or
+          higher (2010-2014)
+        </div>
+      </div>
+    );
   }
 }
 
